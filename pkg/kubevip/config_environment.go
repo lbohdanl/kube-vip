@@ -46,6 +46,23 @@ func ParseEnvironment(c *Config) error {
 		c.LoInterfaceGlobalScope = b
 	}
 
+	env = os.Getenv(vipLoseLeadership)
+	if env != "" {
+		b, err := strconv.ParseBool(env)
+		if err != nil {
+			return err
+		}
+		c.LoseLeadership = b
+	}
+
+	env = os.Getenv(vipLoseLeadershipTimeoutSeconds)
+	if env != "" {
+		i, err := strconv.ParseInt(env, 10, 32)
+		if err != nil {
+			return fmt.Errorf("parsing env var %s (value: %s): %w", vipLoseLeadershipTimeoutSeconds, env, err)
+		}
+		c.LoseLeadershipTimeoutSeconds = int(i)
+	}
 	// Find (services) interface
 	env = os.Getenv(vipServicesInterface)
 	if env != "" {
@@ -988,6 +1005,10 @@ func mergeConfigValues(baseConfig, fileConfig *Config) {
 	// Load balancers slice
 	if len(baseConfig.LoadBalancers) == 0 && len(fileConfig.LoadBalancers) > 0 {
 		baseConfig.LoadBalancers = fileConfig.LoadBalancers
+	}
+
+	if baseConfig.LoseLeadershipTimeoutSeconds == 0 && fileConfig.LoseLeadershipTimeoutSeconds != 0 {
+		baseConfig.LoseLeadershipTimeoutSeconds = fileConfig.LoseLeadershipTimeoutSeconds
 	}
 }
 
